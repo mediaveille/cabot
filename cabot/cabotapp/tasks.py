@@ -27,12 +27,17 @@ def run_all_checks():
     checks = StatusCheck.objects.all()
     seconds = range(60)
     for check in checks:
+        frequency = timedelta(minutes=check.frequency)
         if check.last_run:
-            next_schedule = check.last_run + timedelta(minutes=check.frequency)
+            next_schedule = check.last_run + frequency
         if (not check.last_run) or timezone.now() > next_schedule:
             delay = random.choice(seconds)
             logger.debug('Scheduling task for %s seconds from now' % delay)
-            run_status_check.apply_async((check.id,), countdown=delay)
+            run_status_check.apply_async(
+                (check.id,),
+                countdown=delay,
+                expires=frequency
+            )
 
 
 @task(ignore_result=True)
