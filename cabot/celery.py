@@ -16,6 +16,9 @@ app.conf.beat_schedule = {
     'run-all-checks': {
         'task': 'cabot.cabotapp.tasks.run_all_checks',
         'schedule': timedelta(seconds=60),
+        'options': {
+            'expires': timedelta(seconds=60).total_seconds()
+        }
     },
     'update-shifts': {
         'task': 'cabot.cabotapp.tasks.update_shifts',
