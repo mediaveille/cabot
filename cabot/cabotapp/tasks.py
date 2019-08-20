@@ -2,6 +2,7 @@ import logging
 import random
 
 from celery.task import task
+from celery.exceptions import Reject
 from django.conf import settings
 from django.utils import timezone
 from datetime import timedelta
@@ -16,6 +17,12 @@ def run_status_check(check_or_id):
         check = StatusCheck.objects.get(id=check_or_id)
     else:
         check = check_or_id
+    # Reject is last execution is earlier than frequency
+    frequency = timedelta(minutes=check.frequency)
+    if check.last_run:
+        next_schedule = check.last_run + frequency
+        if next_schedule > timezone.now():
+            raise Reject(reason="a recent result for this check exists", requeue=False)
     # This will call the subclass method
     check.run()
 
